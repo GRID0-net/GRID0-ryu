@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -183,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                         Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                     }
 
-                    return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                    return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
                 }
             }
         }
@@ -328,7 +328,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -352,7 +352,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -391,7 +391,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
                 receiveSize = -1;
 
-                result = WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                result = WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
 
             if (shouldBlockAfterOperation)
@@ -447,7 +447,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
                 receiveSize = -1;
 
-                result = WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                result = WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
 
             if (shouldBlockAfterOperation)
@@ -475,7 +475,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
                 sendSize = -1;
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -496,7 +496,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
                 sendSize = -1;
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -536,7 +536,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -587,7 +587,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -809,7 +809,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
 
@@ -864,7 +864,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Socket Exception: {exception}");
                 }
 
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
         }
     }

@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
             }
             catch (SocketException exception)
             {
-                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+                return WinSockHelper.ConvertError((WsaError)exception.SocketErrorCode);
             }
 
             foreach (PollEvent evnt in events)

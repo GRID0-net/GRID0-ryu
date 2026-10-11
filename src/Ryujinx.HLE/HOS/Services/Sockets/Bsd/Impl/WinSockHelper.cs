@@ -284,19 +284,19 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
         public static LinuxError ConvertError(WsaError errorCode)
         {
-            if (OperatingSystem.IsMacOS())
+            // Callers pass SocketException.SocketErrorCode, .NET's platform-independent code,
+            // whose values are the WinSock numbers on every OS. They used to pass ErrorCode,
+            // which is not normalized: a would-block read surfaced as 10035 and reached the
+            // guest untranslated on macOS and Linux, and Splatoon 3 failed its first NPLN
+            // connection with 2321-4992. The macOS errno table stays as a fallback.
+            if (_errorMap.TryGetValue(errorCode, out LinuxError errno))
             {
-                if (_errorMapMacOs.TryGetValue((int)errorCode, out LinuxError errno))
-                {
-                    return errno;
-                }
+                return errno;
             }
-            else
+
+            if (OperatingSystem.IsMacOS() && _errorMapMacOs.TryGetValue((int)errorCode, out errno))
             {
-                if (_errorMap.TryGetValue(errorCode, out LinuxError errno))
-                {
-                    return errno;
-                }
+                return errno;
             }
 
             return (LinuxError)errorCode;
