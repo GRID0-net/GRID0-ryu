@@ -111,3 +111,12 @@ rather than adding trust, and it is keyed to the game's exact build: a
 title update changes the executable and can silently stop it matching. If
 Splatoon 3 stops connecting after updating the game, that table is the
 first thing to check.
+
+### Splatoon 3 three-player startup readiness
+
+The bundled 11.3.0 small-match IPS matches GRID0+ Toolbox 0.8.10. It waits for
+a completed assigned `All` peer-group roster and matching connected Pia count,
+rather than bypassing missing/unready connectivity. Native reference ownership
+is retained while inspecting the group; the original stability counter remains.
+A Switch-hosted three-player hotspot battle succeeded with this patch. Other
+build IDs remain unchanged. Restart the game to load the updated embedded IPS.
