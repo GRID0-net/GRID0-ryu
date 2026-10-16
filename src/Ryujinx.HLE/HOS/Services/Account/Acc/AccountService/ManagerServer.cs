@@ -226,7 +226,25 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 
             context.ResponseData.Write(NetworkServiceAccountId);
 
-            // TODO: determine and fill the output IPC buffer.
+            // The 0x68-byte NasUserBaseForApplication goes to the fixed-size pointer
+            // buffer. The SDK's GetBirthday reads a NUL-terminated date from its start
+            // (NextendoNetwork citron d8cdcd9, "Splat 3 Plaza posts fix"), so leaving
+            // it as whatever the guest held gives it garbage to parse.
+            byte[] nasUserBase = new byte[0x68];
+            Encoding.ASCII.GetBytes("2000-01-01").CopyTo(nasUserBase, 0);
+
+            if (context.Request.RecvListBuff.Count > 0)
+            {
+                ulong position = context.Request.RecvListBuff[0].Position;
+                ulong size = Math.Min(context.Request.RecvListBuff[0].Size, (ulong)nasUserBase.Length);
+
+                context.Memory.Write(position, nasUserBase.AsSpan(0, (int)size));
+            }
+
+            if (context.Request.ReceiveBuff.Count > 0 && context.Request.ReceiveBuff[0].Size > 0)
+            {
+                context.Memory.Write(context.Request.ReceiveBuff[0].Position, new byte[context.Request.ReceiveBuff[0].Size]);
+            }
 
             return ResultCode.Success;
         }
