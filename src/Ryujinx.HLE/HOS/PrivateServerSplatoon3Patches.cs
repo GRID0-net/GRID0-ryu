@@ -1,15 +1,15 @@
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Loaders.Mods;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace Ryujinx.HLE.HOS
 {
     /// <summary>
     /// The binary patches Splatoon 3 needs before it will talk to a private server, applied
-    /// in memory rather than read from <c>exefs_patches</c> on disk.
+    /// from GRID0+'s own patch folder.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -25,16 +25,16 @@ namespace Ryujinx.HLE.HOS
     /// pins its own certificates"), which is where these patches come from.
     /// </para>
     /// <para>
-    /// The patch bytes are the real <c>.ips</c> files shipped in the
-    /// <see href="https://github.com/GRID0-net/GRID0plus-cfw">GRID0plus-cfw</see>
-    /// repository under <c>toolbox/romfs/sd/atmosphere/exefs_patches/</c> -- the exact files a real
-    /// console applies through Atmosphère. They are embedded in this assembly (see the
-    /// <c>HOS\Patches\exefs_patches\**\*.ips</c> item in <c>Ryujinx.HLE.csproj</c>) and applied
-    /// here in memory, so the emulator needs no SD-card <c>exefs_patches</c> directory. Only the
-    /// Splatoon 3 game patches travel with the emulator: the toolbox's <c>bcat</c>, system
-    /// <c>ssl:</c> and browser patches target modules this emulator high-level-emulates rather
-    /// than running as a guest NSO, so they could never match a loaded build id and are left to
-    /// the console toolbox. The <c>.ips</c> bytes carry no Nintendo code and neither create nor
+    /// The patch bytes are the real <c>.ips</c> files of the
+    /// <see href="https://github.com/GRID0-net/GRID0plus-cfw">GRID0plus-cfw</see> repository's
+    /// <c>patches/</c> directory -- the exact files a real console applies through Atmosphère.
+    /// None ship inside the emulator: <c>Grid0Patches</c> downloads the newest
+    /// <c>patches-&lt;serial&gt;</c> release into <see cref="PatchesDir"/> at startup, laid out
+    /// as <c>exefs_patches/&lt;category&gt;/&lt;buildId&gt;.ips</c>, the same paths the release
+    /// manifest names. Only the release's Splatoon 3 game patches are downloaded: its
+    /// <c>bcat</c>, system <c>ssl:</c> and browser patches target modules this emulator
+    /// high-level-emulates rather than running as a guest NSO, so they could never match a
+    /// loaded build id. The <c>.ips</c> bytes carry no Nintendo code and neither create nor
     /// impersonate a Nintendo signature.
     /// </para>
     /// <para>
@@ -44,23 +44,22 @@ namespace Ryujinx.HLE.HOS
     /// the game's own binary and silently stops these patches matching -- the same failure mode
     /// <c>switch/README.md</c> warns about for the disk-based version of this patch. A build
     /// with no matching file gets nothing, exactly as an unmatched <c>exefs_patches</c> file
-    /// would: if Splatoon 3 stops connecting after an update, adding the new build's patches to
-    /// the toolbox (and re-syncing them here) is the first thing to try.
+    /// would: if Splatoon 3 stops connecting after an update, publishing the new build's patches
+    /// is the first thing to try.
     /// </para>
     /// </remarks>
-    internal static class PrivateServerSplatoon3Patches
+    public static class PrivateServerSplatoon3Patches
     {
         public const ulong Splatoon3ApplicationId = 0x0100C2500FC20000;
 
-        // Manifest-name marker for the embedded toolbox patch tree. Each resource is named
-        // ...Patches.exefs_patches.<category>.<buildId>.ips, so a patch for a build is found by
-        // the "<buildId>.ips" suffix regardless of how MSBuild mangled the leading path.
-        private const string PatchResourceMarker = ".Patches.exefs_patches.";
-
-        private static readonly Assembly _assembly = typeof(PrivateServerSplatoon3Patches).Assembly;
+        /// <summary>
+        /// Where the downloaded patches live. Exclusively GRID0+'s: the updater deletes anything
+        /// in it the newest manifest does not list.
+        /// </summary>
+        public static string PatchesDir => Path.Combine(AppDataManager.BaseDirPath, "grid0plus", "patches");
 
         /// <summary>
-        /// Older Splatoon 3 builds the toolbox ships no <c>.ips</c> files for, mapped to the build
+        /// Older Splatoon 3 builds the patch release has no <c>.ips</c> files for, mapped to the build
         /// whose files carry the same bytes and the categories of those files that apply.
         /// </summary>
         /// <remarks>
@@ -89,7 +88,7 @@ namespace Ryujinx.HLE.HOS
         /// Adds every embedded patch whose file name matches <paramref name="buildId"/> to
         /// <paramref name="target"/>. Returns how many were added (0 for an unrecognised build).
         /// </summary>
-        public static int Apply(string buildId, MemPatch target)
+        internal static int Apply(string buildId, MemPatch target)
         {
             if (string.IsNullOrEmpty(buildId))
             {
@@ -105,28 +104,34 @@ namespace Ryujinx.HLE.HOS
                 onlyCategories = shared.Categories;
             }
 
-            string suffix = "." + patchBuildId + ".ips";
+            string categoriesDir = Path.Combine(PatchesDir, "exefs_patches");
+            if (!Directory.Exists(categoriesDir))
+            {
+                Logger.Warning?.Print(LogClass.ModLoader,
+                    $"Splatoon 3: no GRID0+ patches in {PatchesDir}; restart the emulator online to download them");
+
+                return 0;
+            }
+
             int applied = 0;
 
-            foreach (string name in _assembly.GetManifestResourceNames())
+            foreach (string category in Directory.GetDirectories(categoriesDir))
             {
-                if (!name.Contains(PatchResourceMarker, StringComparison.Ordinal) ||
-                    !name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                if (onlyCategories != null && Array.IndexOf(onlyCategories, Path.GetFileName(category)) < 0)
                 {
                     continue;
                 }
 
-                if (onlyCategories != null && !IsInCategories(name, onlyCategories))
+                // The 40-digit name only. The release also carries a 64-digit copy of the same
+                // bytes for Atmosphère versions that match that form; reading both would apply
+                // every patch twice.
+                string file = Path.Combine(category, patchBuildId + ".ips");
+                if (!File.Exists(file))
                 {
                     continue;
                 }
 
-                using Stream stream = _assembly.GetManifestResourceStream(name);
-                if (stream == null)
-                {
-                    continue;
-                }
-
+                using FileStream stream = File.OpenRead(file);
                 using BinaryReader reader = new(stream);
                 new IpsPatcher(reader).AddPatches(target);
                 applied++;
@@ -135,28 +140,10 @@ namespace Ryujinx.HLE.HOS
             if (applied > 0)
             {
                 Logger.Info?.Print(LogClass.ModLoader,
-                    $"Splatoon 3: applied {applied} embedded private-server patch(es) for build {buildId}");
+                    $"Splatoon 3: applied {applied} GRID0+ private-server patch(es) for build {buildId}");
             }
 
             return applied;
-        }
-
-        /// <summary>
-        /// Whether a manifest resource name sits in one of the given patch categories. The name
-        /// reads <c>...exefs_patches.&lt;category&gt;.&lt;buildId&gt;.ips</c>, so a category is
-        /// matched with both of its dots, never as a bare substring of another category.
-        /// </summary>
-        private static bool IsInCategories(string resourceName, string[] categories)
-        {
-            foreach (string category in categories)
-            {
-                if (resourceName.Contains(".exefs_patches." + category + ".", StringComparison.Ordinal))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

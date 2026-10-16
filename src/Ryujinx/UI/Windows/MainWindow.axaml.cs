@@ -412,6 +412,9 @@ namespace Ryujinx.Ava.UI.Windows
                 await Dispatcher.UIThread.InvokeAsync(async () => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
             }
 
+            // [GRID0] Every launch: the Splatoon 3 patches are downloaded, never bundled.
+            await Grid0Patches.CheckAtStartupAsync();
+
             if (!Updater.CanUpdate() || CommandLineState.HideAvailableUpdates)
                 return;
 

@@ -100,23 +100,34 @@ ciphertext and the certificate trust `private-servers.md` sets up cannot
 reach it. Without a fix, the game just sits on "connecting" forever, TLS
 handshake and all, once traffic is redirected to a private server.
 
-Ryujinx-LanPlay applies the same certificate-pinning patch a real console
-running SwitchNet needs **automatically**, in memory, whenever
-**Private server address** (`private-servers.md`) is set — no
-`exefs_patches` mod to install by hand. See
-`PrivateServerSplatoon3Patches.cs` for the patch bytes and the build ids
-they cover, and `kinnay/NPLN-Protocols`' `generate_patch.py` for the tool
-that originally produces them. It *disables* certificate verification
-rather than adding trust, and it is keyed to the game's exact build: a
-title update changes the executable and can silently stop it matching. If
-Splatoon 3 stops connecting after updating the game, that table is the
-first thing to check.
+Ryujinx-LanPlay applies the same patches a real console running GRID0+
+needs **automatically**, in memory, whenever **Private server address**
+(`private-servers.md`) is set — no `exefs_patches` mod to install by hand.
+
+None of them ship inside the emulator. At every start, Ryujinx reads the
+newest `patches-<serial>` release of
+[GRID0plus-cfw](https://github.com/GRID0-net/GRID0plus-cfw/releases), the same
+release the console Toolbox installs from, compares the SHA-256 of every file
+in `<Ryujinx data>/grid0plus/patches/` with its manifest, and if anything
+changed asks to download it and restart. Each file is checked against the
+manifest before it replaces anything, and anything in that folder the
+manifest does not list is deleted, so do not put your own mods there. Only
+Splatoon 3 patches are downloaded: the release's system-module patches
+target modules Ryujinx emulates instead of running.
+
+`PrivateServerSplatoon3Patches.cs` applies them and maps two older game
+builds onto 11.3.0's patch files. The patches *disable* certificate
+verification rather than adding trust, and they are keyed to the game's
+exact build: a title update changes the executable and silently stops them
+matching. If Splatoon 3 stops connecting after updating the game, a patch
+release for the new build is the first thing to check.
 
 ### Splatoon 3 three-player startup readiness
 
-The bundled 11.3.0 small-match IPS matches GRID0+ Toolbox 0.8.10. It waits for
+The 11.3.0 small-match IPS is the console Toolbox's. It waits for
 a completed assigned `All` peer-group roster and matching connected Pia count,
 rather than bypassing missing/unready connectivity. Native reference ownership
 is retained while inspecting the group; the original stability counter remains.
 A Switch-hosted three-player hotspot battle succeeded with this patch. Other
-build IDs remain unchanged. Restart the game to load the updated embedded IPS.
+build IDs remain unchanged. A patch update needs a restart, which the update
+prompt does for you.

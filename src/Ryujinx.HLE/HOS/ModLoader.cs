@@ -726,13 +726,13 @@ namespace Ryujinx.HLE.HOS
             if (applicationId == PrivateServerSplatoon3Patches.Splatoon3ApplicationId
                 && !string.IsNullOrEmpty(privateServerAddress))
             {
-                patched |= ApplyEmbeddedSplatoon3Patches(programs);
+                patched |= ApplyGrid0Splatoon3Patches(programs);
             }
 
             return patched;
         }
 
-        private static bool ApplyEmbeddedSplatoon3Patches(params ReadOnlySpan<IExecutable> programs)
+        private static bool ApplyGrid0Splatoon3Patches(params ReadOnlySpan<IExecutable> programs)
         {
             int count = 0;
 
