@@ -199,7 +199,7 @@ jobs:
       - name: Pack the Windows build
         if: startsWith(matrix.platform.name, 'win-')
         env:
-          BASE: ryujinx-${{ needs.info.outputs.version }}-${{ matrix.platform.zip_os_name }}
+          BASE: ryujinx-${{ matrix.platform.zip_os_name }}
         run: |
           set -euo pipefail
           # Packed from inside publish/ so the emulator sits at the root of the archive rather than
@@ -211,7 +211,7 @@ jobs:
       - name: Pack the Linux build
         if: startsWith(matrix.platform.name, 'linux-')
         env:
-          BASE: ryujinx-${{ needs.info.outputs.version }}-${{ matrix.platform.zip_os_name }}
+          BASE: ryujinx-${{ matrix.platform.zip_os_name }}
         run: |
           set -euo pipefail
           chmod +x publish/Ryujinx.sh publish/Ryujinx
@@ -244,7 +244,7 @@ jobs:
             distribution/linux/appimage/build-appimage.sh
 
           mv publish_appimage/Ryujinx.AppImage \
-            "release_output/ryujinx-${{ needs.info.outputs.version }}-$ARCH_NAME.AppImage"
+            "release_output/ryujinx-$ARCH_NAME.AppImage"
 
       - name: Upload the artifacts
         uses: actions/upload-artifact@v4
@@ -317,6 +317,8 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf release_output/Ryujinx.app
+          # Named without the version, like every other release file: the emulator updates itself.
+          mv release_output/*-macos_universal.app.tar.gz release_output/ryujinx-macos_universal.app.tar.gz
           ls -la release_output
 
       - name: Upload the artifacts
