@@ -42,6 +42,17 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Proxy
             _lanInterfaceId = lanInterfaceId;
 
             BaseSocket = new Socket(domain, type, protocol);
+
+            // Windows reports an ICMP port-unreachable for an earlier datagram as WSAECONNRESET on the next
+            // ReceiveFrom of that UDP socket. A Switch never fails a UDP receive that way, and Pia treats the
+            // ECONNRESET as fatal: Splatoon 3 LAN sessions dropped with 2318-0006 (SessionKeepFailed) about
+            // 13 s after joining. SIO_UDP_CONNRESET off makes Windows behave like every other UDP stack.
+            if (OperatingSystem.IsWindows() && type == SocketType.Dgram)
+            {
+                const int SioUdpConnReset = unchecked((int)0x9800000C);
+
+                BaseSocket.IOControl(SioUdpConnReset, new byte[4], null);
+            }
         }
 
         private void EnsureNetworkInterfaceBound()
